@@ -1,3 +1,4 @@
+
 menu "SoC Support"
 
 choice
@@ -97,6 +98,9 @@ config MEDIATEK_MT6889
 
 config MEDIATEK_MT6893
     bool "MediaTek MT6893 SoC"
+
+config MEDIATEK_MT6895
+    bool "MediaTek MT6895 SoC"
 
 endchoice
 

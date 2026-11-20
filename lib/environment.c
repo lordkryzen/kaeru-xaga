@@ -12,9 +12,9 @@
 #define ENV_MSG_MAX_LEN (ENV_KEY_MAX_LEN + ENV_VAL_MAX_LEN + 16)
 
 char *get_env(char *name) {
-    return ((char *(*)(char *))(CONFIG_GET_ENV_ADDRESS | 1))(name);
+    return ((char *(*)(char *))ARCH_FN(CONFIG_GET_ENV_ADDRESS))(name);
 }
 
 int set_env(char *name, char *value) {
-    return ((int (*)(char *, char *))(CONFIG_SET_ENV_ADDRESS | 1))(name, value);
+    return ((int (*)(char *, char *))ARCH_FN(CONFIG_SET_ENV_ADDRESS))(name, value);
 }

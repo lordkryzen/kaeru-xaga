@@ -120,7 +120,7 @@
 })
 
 #define GENMASK(h, l) \
-    (((~0UL) << (l)) & (~0UL >> (31 - (h))))
+    (((~0U) << (l)) & (~0U >> (31 - (h))))
 
 #define FIELD_PREP(mask, val) \
     (((val) << (__builtin_ctzl(mask))) & (mask))

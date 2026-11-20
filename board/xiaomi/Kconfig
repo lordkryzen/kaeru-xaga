@@ -1,3 +1,8 @@
+
+config XIAOMI_XAGA
+    bool "Support POCO X4 GT / Redmi Note 11T Pro / Redmi K50i (xaga), AArch64"
+    depends on ARCH_ARM64
+
 config XIAOMI_NIKEL
     bool "Support Redmi Note 4"
     default n
@@ -63,3 +68,46 @@ config XIAOMI_LIGHT
     default n
     help
       Say Y if you want to include support for POCO M4 5G / Redmi 10 5G / Redmi 11 Prime 5G / Redmi Note 11E/11R
+
+if XIAOMI_XAGA
+config BOOT_SELECT_ADDRESS
+    hex "Native boot selection function"
+config BOOT_SELECT_CALLER
+    hex "Native boot selection call site"
+config SELECTED_BOOTMODE_ADDRESS
+    hex "Native selected boot app byte"
+config KEY_DETECT_ADDRESS
+    hex "Native hardware key reader"
+config AVB_BOOT_STATE_ADDRESS
+    hex "Native AVB boot state word"
+config AVB_SET_BOOT_STATE_ADDRESS
+    hex "Native AVB boot state setter"
+config OTP_VERSION_INIT_ADDRESS
+    hex "Native read-only OTP version table initializer"
+config AVB_SLOT_VERIFY_ADDRESS
+    hex "Native AVB slot verifier"
+config AVB_SLOT_VERIFY_CALLER
+    hex "Native AVB slot verification call site"
+config ENV_INIT_ADDRESS
+    hex "ENV_INIT_ADDRESS"
+config GET_LOCK_STATE_ADDRESS
+    hex "GET_LOCK_STATE_ADDRESS"
+config VFY_POLICY_ADDRESS
+    hex "VFY_POLICY_ADDRESS"
+config DM_VERITY_WARNING_ADDRESS
+    hex "DM_VERITY_WARNING_ADDRESS"
+config BIO_OPEN_ADDRESS
+    hex "BIO_OPEN_ADDRESS"
+config BIO_CLOSE_ADDRESS
+    hex "BIO_CLOSE_ADDRESS"
+config BIO_READ_ADDRESS
+    hex "BIO_READ_ADDRESS"
+config BIO_WRITE_ADDRESS
+    hex "BIO_WRITE_ADDRESS"
+config BIO_DEVICE_LIST_ADDRESS
+    hex "BIO_DEVICE_LIST_ADDRESS"
+config FASTBOOT_TRANSPORT_ADDRESS
+    hex "FASTBOOT_TRANSPORT_ADDRESS"
+config ENV_INIT_CALLER
+    hex "Native environment init call site"
+endif

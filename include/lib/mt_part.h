@@ -47,13 +47,13 @@ struct device_t {
 
 #ifdef CONFIG_MT_PART_GET_DEVICE_ADDRESS
 static inline struct device_t* mt_part_get_device(void) {
-    return ((struct device_t* (*)(void))(CONFIG_MT_PART_GET_DEVICE_ADDRESS | 1))();
+    return ((struct device_t* (*)(void))ARCH_FN(CONFIG_MT_PART_GET_DEVICE_ADDRESS))();
 }
 #endif
 
 #ifdef CONFIG_MT_PART_GET_PARTITION_ADDRESS
 static inline part_t* mt_part_get_partition(const char* name) {
-    return ((part_t* (*)(const char*))(CONFIG_MT_PART_GET_PARTITION_ADDRESS | 1))(name);
+    return ((part_t* (*)(const char*))ARCH_FN(CONFIG_MT_PART_GET_PARTITION_ADDRESS))(name);
 }
 #endif
 

@@ -15,16 +15,28 @@
 
 struct fetch_src {
     const struct part_info* part;
-    uint32_t base;
+    uintptr_t base;
     uint64_t size;
 };
 
 static inline int usb_write(const void* buf, unsigned len) {
-    return ((int (*)(const void*, unsigned))(CONFIG_FASTBOOT_USB_WRITE_ADDRESS | 1))(buf, len);
+#ifdef CONFIG_XIAOMI_XAGA
+    uintptr_t transport = *(uintptr_t *)CONFIG_FASTBOOT_TRANSPORT_ADDRESS;
+    if (!transport) return -1;
+    uintptr_t send = *(uintptr_t *)(transport + 0x30);
+    return ((int (*)(const void *, unsigned, unsigned))send)(buf, len, 5000);
+#else
+    return ((int (*)(const void*, unsigned))ARCH_FN(CONFIG_FASTBOOT_USB_WRITE_ADDRESS))(buf, len);
+#endif
 }
 
 static inline void lk_getvar(const char* arg, void* data, unsigned sz) {
-    ((void (*)(const char*, void*, unsigned))(CONFIG_FASTBOOT_GETVAR_ADDRESS | 1))(arg, data, sz);
+#ifdef CONFIG_XIAOMI_XAGA
+    extern void xaga_original_getvar(const char *, void *, unsigned);
+    xaga_original_getvar(arg, data, sz);
+#else
+    ((void (*)(const char*, void*, unsigned))ARCH_FN(CONFIG_FASTBOOT_GETVAR_ADDRESS))(arg, data, sz);
+#endif
 }
 
 static bool usb_write_all(const uint8_t* buf, uint32_t len) {
@@ -43,7 +55,8 @@ static bool usb_write_all(const uint8_t* buf, uint32_t len) {
 }
 
 static bool fetch_src_find(const char* name, struct fetch_src* src) {
-    uint32_t base, size;
+    uintptr_t base;
+    size_t size;
 
     if (mem_region_find && mem_region_find(name, &base, &size)) {
         src->part = NULL;
@@ -109,7 +122,7 @@ static void cmd_fetch(const char* arg, void* data, unsigned sz) {
             return;
         }
     } else {
-        memcpy(data, (const void*)(uintptr_t)(src.base + (uint32_t)off), len);
+        memcpy(data, (const void*)(uintptr_t)(src.base + (uintptr_t)off), len);
     }
 
     char hdr[16];
@@ -123,7 +136,7 @@ static void cmd_fetch(const char* arg, void* data, unsigned sz) {
     fastboot_okay("");
 }
 
-static void cmd_getvar(const char* arg, void* data, unsigned sz) {
+void cmd_getvar(const char* arg, void* data, unsigned sz) {
     const char* var = skip_spaces(arg);
     char value[19];
 
@@ -147,4 +160,6 @@ static void cmd_getvar(const char* arg, void* data, unsigned sz) {
 }
 
 FASTBOOT_CMD(fetch, "fetch:", cmd_fetch, 1);
+#ifndef CONFIG_XIAOMI_XAGA
 FASTBOOT_CMD(getvar, "getvar:", cmd_getvar, 1);
+#endif

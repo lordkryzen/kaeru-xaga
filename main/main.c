@@ -7,15 +7,18 @@
 #include <board_ops.h>
 #include <main/main.h>
 
-uint32_t kaeru_reloc_delta;
+uintptr_t kaeru_reloc_delta;
 
-void kaeru_late_init(void) {
+void kaeru_late_init(const struct app_descriptor *app) {
     OPTIONAL_INIT(framebuffer_init);
     OPTIONAL_INIT(storage_init);
 
     board_late_init();
+#ifdef CONFIG_ARCH_ARM64
+    fastboot_register_commands();
+#endif
 
-    ((void (*)(const struct app_descriptor*))(CONFIG_APP_ADDRESS | 1))(NULL);
+    ((void (*)(const struct app_descriptor*))ARCH_FN(CONFIG_APP_ADDRESS))(app);
 }
 
 // We are now running in the heap, having been loaded and called by
@@ -27,25 +30,30 @@ void kaeru_late_init(void) {
 void kaeru_early_init(void) {
     OPTIONAL_INIT(sej_init);
 
-    uint32_t search_val = CONFIG_APP_ADDRESS | 1;
-    uint32_t start = CONFIG_BOOTLOADER_BASE;
-    uint32_t end = CONFIG_BOOTLOADER_BASE + CONFIG_BOOTLOADER_SIZE;
-    uint32_t ptr_addr = 0;
+    uintptr_t search_val = ARCH_FN(CONFIG_APP_ADDRESS);
+    uintptr_t start = CONFIG_BOOTLOADER_BASE;
+    uintptr_t end = CONFIG_BOOTLOADER_BASE + CONFIG_BOOTLOADER_SIZE;
+    uintptr_t ptr_addr = 0;
 
     print_kaeru_info(printf);
     common_early_init();
     board_early_init();
 
-    for (uint32_t addr = start; addr < end; addr += 4) {
-        if (*(volatile uint32_t*)addr == search_val) {
+    for (uintptr_t addr = start; addr + sizeof(uintptr_t) <= end; addr += sizeof(uintptr_t)) {
+        if (*(volatile uintptr_t*)addr == search_val) {
             ptr_addr = addr;
             break;
         }
     }
 
     if (ptr_addr != 0) {
-        *(volatile uint32_t*)ptr_addr = (uint32_t)kaeru_late_init | 1;
-        arch_clean_cache_range(ptr_addr, 4);
+#ifdef CONFIG_ARCH_ARM64
+        uintptr_t replacement = ARCH_FN(kaeru_late_init);
+        arch_patch_bytes(ptr_addr, &replacement, sizeof(replacement));
+#else
+        *(volatile uintptr_t*)ptr_addr = ARCH_FN(kaeru_late_init);
+        arch_clean_cache_range(ptr_addr, sizeof(uintptr_t));
+#endif
     } else {
         // Not a critical failure, since the device should still boot
         // but I'm sure users will appreciate some feedback about it.
@@ -53,5 +61,5 @@ void kaeru_early_init(void) {
         printf("kaeru won't be able to run its late init!\n");
     }
 
-    ((void (*)(void))(CONFIG_PLATFORM_INIT_ADDRESS | 1))();
+    ((void (*)(void))ARCH_FN(CONFIG_PLATFORM_INIT_ADDRESS))();
 }

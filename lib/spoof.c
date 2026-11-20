@@ -46,7 +46,10 @@ void cmd_spoof_bootloader_lock(const char *arg, void *data, unsigned sz) {
 
     if (target != -1) {
         if (status != target) {
-            set_env(KAERU_ENV_BLDR_SPOOF, target ? "1" : "0");
+            if (set_env(KAERU_ENV_BLDR_SPOOF, target ? "1" : "0") != 0) {
+                fastboot_fail("Failed to persist bootloader spoof setting");
+                return;
+            }
             fastboot_info(target ?
                 "Bootloader spoofing enabled." :
                 "Bootloader spoofing disabled.");

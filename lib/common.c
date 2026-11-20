@@ -17,7 +17,7 @@ void reboot_emergency(void) {
 
 bool mtk_detect_key(unsigned short key) {
 #if defined(CONFIG_MTK_DETECT_KEY_ADDRESS) && CONFIG_MTK_DETECT_KEY_ADDRESS
-    return ((bool (*)(unsigned short))(CONFIG_MTK_DETECT_KEY_ADDRESS | 1))(key);
+    return ((bool (*)(unsigned short))ARCH_FN(CONFIG_MTK_DETECT_KEY_ADDRESS))(key);
 #else
     (void)key;
     return false;
@@ -26,7 +26,7 @@ bool mtk_detect_key(unsigned short key) {
 
 void print_kaeru_info(int (*out)(const char *, ...)) {
 #ifndef CONFIG_EXCLUDE_BRANDING
-    unsigned int sp, lr, vbar;
+    uintptr_t sp, lr, vbar;
 
     READ_SP(sp);
     READ_LR(lr);
@@ -48,9 +48,9 @@ void print_kaeru_info(int (*out)(const char *, ...)) {
     out(" THIS IS A FREE TOOL. IF YOU PAID FOR IT, YOU HAVE BEEN SCAMMED.\n");
     out(" THIS TOOL IS PROVIDED AS-IS WITHOUT WARRANTY OF ANY KIND.\n");
     out(" USE AT YOUR OWN RISK.\n\n");
-    out(" Vector Base  (VBAR): 0x%08x\n", vbar);
-    out(" Stack Pointer  (SP): 0x%08x\n", sp);
-    out(" Link Register  (LR): 0x%08x\n", lr);
+    out(" Vector Base  (VBAR): 0x%lx\n", vbar);
+    out(" Stack Pointer  (SP): 0x%lx\n", sp);
+    out(" Link Register  (LR): 0x%lx\n", lr);
     out("********************************************************************\n\n");
 #else
     (void)out;

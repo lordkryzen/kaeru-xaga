@@ -26,7 +26,7 @@ export KAERU_DEBUG
 # o  use make's built-in rules and variables
 #    (this increases performance and avoids hard-to-debug behaviour);
 # o  print "Entering directory ...";
-ARCH ?= arm
+ARCH ?= $(if $(findstring CONFIG_ARCH_ARM64=y,$(shell cat .config 2>/dev/null)),arm64,arm)
 MAKEFLAGS += -rR --no-print-directory
 
 # To put more focus on warnings, be less verbose as default
@@ -116,7 +116,11 @@ VPATH		:= $(srctree)
 
 export srctree objtree VPATH
 
+ifeq ($(ARCH),arm64)
+CROSS_COMPILE ?= aarch64-linux-gnu-
+else
 CROSS_COMPILE ?= arm-linux-gnueabihf-
+endif
 
 KCONFIG_CONFIG	?= .config
 export KCONFIG_CONFIG
@@ -208,10 +212,23 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
 		   -fno-builtin -fno-lto -nostdlib \
-		   -std=gnu99 -Os -mthumb  \
+		   -std=gnu99 -Os  \
 		   -fno-delete-null-pointer-checks \
 		   -Wno-builtin-declaration-mismatch -fPIE -Wno-main -nostdlib \
-		   -mcpu=cortex-a15 -mno-unaligned-access
+		   -include $(srctree)/include/arch/call.h
+ifeq ($(ARCH),arm64)
+KBUILD_CFLAGS += -mgeneral-regs-only -mstrict-align -fno-asynchronous-unwind-tables -DNANOPRINTF_USE_FLOAT_FORMAT_SPECIFIERS=0 \
+    -DNANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS=1 \
+    -DNANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS=1 \
+    -DNANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS=1 \
+    -DNANOPRINTF_USE_SMALL_FORMAT_SPECIFIERS=1 \
+    -DNANOPRINTF_USE_BINARY_FORMAT_SPECIFIERS=0 \
+    -DNANOPRINTF_USE_WRITEBACK_FORMAT_SPECIFIERS=0 \
+    -DNANOPRINTF_USE_ALT_FORM_FLAG=1
+KAERU_LDFLAGS := -pie --no-dynamic-linker -Bsymbolic
+else
+KBUILD_CFLAGS += -mthumb -mcpu=cortex-a15 -mno-unaligned-access
+endif
 KBUILD_CFLAGS += -DKAERU_VERSION=\"$(KAERU_VERSION)\" -DKAERU_DEBUG=$(KAERU_DEBUG)
 KBUILD_CFLAGS += $(foreach var,$(filter CONFIG_%,$(.VARIABLES)),-D$(var)=$($(var)))
 KBUILD_AFLAGS_KERNEL :=
@@ -356,12 +373,20 @@ kaeru-all   := $(kaeru-objs) $(kaeru-libs)
 # command line.
 # This allow a user to issue only 'make' to build a kernel including modules
 # Defaults to vmlinux, but the arch makefile usually adds further targets
+ifeq ($(ARCH),arm64)
+all: arch/$(ARCH)/linker.lds kaeru arch/arm64/bootstrap.bin
+arch/arm64/bootstrap.bin: arch/arm64/bootstrap.S
+	$(AS) -o arch/arm64/bootstrap.o $<
+	$(LD) -Ttext=0 -e bootstrap arch/arm64/bootstrap.o -o arch/arm64/bootstrap.elf
+	$(OBJCOPY) -O binary arch/arm64/bootstrap.elf $@
+else
 all: arch/$(ARCH)/linker.lds kaeru stage1
+endif
 
 # Do modpost on a prelinked vmlinux. The finally linked vmlinux has
 # relevant sections renamed as per the linker script.
 quiet_cmd_kaeru = LD      $@.o
-cmd_kaeru = $(LD) --no-warn-rwx-segments --start-group $(kaeru-objs) $(kaeru-libs) --end-group \
+cmd_kaeru = $(LD) $(KAERU_LDFLAGS) --no-warn-rwx-segments --start-group $(kaeru-objs) $(kaeru-libs) --end-group \
 			-o $@.o --script=arch/$(ARCH)/linker.lds
 
 arch/$(ARCH)/linker.lds: arch/$(ARCH)/linker.lds.S FORCE

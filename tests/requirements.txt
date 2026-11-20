@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+unicorn==2.1.4
+pyelftools>=0.32

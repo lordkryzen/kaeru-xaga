@@ -11,7 +11,7 @@
 #define MEM_READ_DEFAULT 0x100
 #define MEM_READ_MAX     0x400
 
-static void mem_hexdump(uint32_t addr, uint32_t len) {
+static void mem_hexdump(uintptr_t addr, uint32_t len) {
     const uint8_t* p = (const uint8_t*)(uintptr_t)addr;
     char line[FASTBOOT_INFO_MAX + 1];
 
@@ -20,8 +20,8 @@ static void mem_hexdump(uint32_t addr, uint32_t len) {
         size_t used = 0;
         uint32_t i;
 
-        used += npf_snprintf(line + used, sizeof(line) - used, "%08X ",
-                             (unsigned)(addr + off));
+        used += npf_snprintf(line + used, sizeof(line) - used, "%016lx ",
+                             (unsigned long)(addr + off));
 
         for (i = 0; i < n; i++) {
             used += npf_snprintf(line + used, sizeof(line) - used, " %02x", p[off + i]);
@@ -59,8 +59,8 @@ void cmd_mem(const char* arg, void* data, unsigned sz) {
     }
 
     const char* end;
-    uint32_t addr = (uint32_t)parse_hex64(tok, &end);
-    uint32_t region_size;
+    uintptr_t addr = (uintptr_t)parse_hex64(tok, &end);
+    size_t region_size;
 
     if (*end && !(mem_region_find && mem_region_find(tok, &addr, &region_size))) {
         fastboot_fail(mem_region_find ? "Address is neither a number nor a known region"
@@ -103,7 +103,7 @@ void cmd_mem(const char* arg, void* data, unsigned sz) {
 
         WRITE32(addr, value);
 
-        npf_snprintf(line, sizeof(line), "%08X = %08X", (unsigned)addr,
+        npf_snprintf(line, sizeof(line), "%016lx = %08X", (unsigned long)addr,
                      (unsigned)READ32(addr));
         fastboot_info(line);
         fastboot_okay("");

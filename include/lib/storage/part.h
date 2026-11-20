@@ -14,8 +14,13 @@
 
 struct part_info {
     char     name[PART_NAME_MAX + 1];
+#ifdef CONFIG_ARCH_ARM64
+    uint64_t start_block;
+    uint64_t size_blocks;
+#else
     uint32_t start_block;
     uint32_t size_blocks;
+#endif
 };
 
 struct part_context {

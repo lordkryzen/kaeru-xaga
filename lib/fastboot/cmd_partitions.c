@@ -16,15 +16,24 @@ void cmd_partitions(const char* arg, void* data, unsigned sz) {
 
     char line[FASTBOOT_INFO_MAX + 1];
 
+#ifdef CONFIG_NATIVE_BIO_STORAGE
+    fastboot_info("BIO device/partition    offset    blocks");
+#else
     fastboot_info("name                    start     blocks");
+#endif
     for (int i = 0; i < count; i++) {
         const struct part_info* part = storage_part_get(i);
         if (!part) {
             break;
         }
 
+#ifdef CONFIG_ARCH_ARM64
+        npf_snprintf(line, sizeof(line), "%-20s %9llx %10llx", part->name,
+                     (unsigned long long)part->start_block, (unsigned long long)part->size_blocks);
+#else
         npf_snprintf(line, sizeof(line), "%-20s %9u %10u", part->name,
                      (unsigned)part->start_block, (unsigned)part->size_blocks);
+#endif
         fastboot_info(line);
     }
 

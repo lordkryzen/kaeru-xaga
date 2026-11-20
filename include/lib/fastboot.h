@@ -6,6 +6,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #define FASTBOOT_INFO_MAX 59
@@ -27,7 +28,7 @@ struct fastboot_command {
 
 #define FASTBOOT_CMD(id, str, fn, sec)                                      \
     static const struct fastboot_command __fastboot_cmd_##id                \
-            __attribute__((used, section(".fastboot_cmds"), aligned(4))) = { \
+            __attribute__((used, section(".fastboot_cmds"), aligned(sizeof(uintptr_t)))) = { \
                     .prefix = (str),                                        \
                     .handle = (fn),                                         \
                     .security = (sec),                                      \
@@ -44,4 +45,4 @@ void fastboot_publish(const char* name, const char* value);
 
 void cmd_version(const char* arg, void* data, unsigned sz);
 
-bool mem_region_find(const char* name, uint32_t* base, uint32_t* size) __attribute__((weak));
+bool mem_region_find(const char* name, uintptr_t* base, size_t* size) __attribute__((weak));

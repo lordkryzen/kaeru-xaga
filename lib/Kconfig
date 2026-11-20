@@ -1,3 +1,4 @@
+
 menu "Library Options"
 
 menu "Framebuffer Support"
@@ -286,6 +287,12 @@ menu "Recovery Support"
 endmenu
 
 menu "Storage Support"
+    config NATIVE_BIO_STORAGE
+        bool "Use the native xaga AArch64 BIO storage API"
+        depends on ARCH_ARM64
+        select STORAGE_SUPPORT
+        default n
+
     config STORAGE_SUPPORT
         bool "Enable storage support"
         depends on !USE_PMT_PARTITION
@@ -368,6 +375,10 @@ menu "Memory and Address Mapping"
 endmenu
 
 menu "Logging Options"
+    config NATIVE_PRINTF_LOG
+        bool "Send formatted logging through the existing LK printf"
+        default n
+
     config LK_LOG_STORE
         bool "Enable LK Log Store"
         default y

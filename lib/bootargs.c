@@ -45,7 +45,7 @@ static bool do_cmdline_replace(char *cmdline, const char *param,
 
 bool cmdline_replace(char *cmdline, const char *param,
                      const char *old, const char *new) {
-    uint32_t prev = enable_unaligned();
+    uintptr_t prev = enable_unaligned();
     bool ret = do_cmdline_replace(cmdline, param, old, new);
     restore_unaligned(prev);
     return ret;

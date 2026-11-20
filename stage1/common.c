@@ -16,28 +16,28 @@
 void init_storage(void) {
     // AAPCS: r0-r3 are caller-saved scratch registers regardless of
     // callee's actual parameter count. Passing an unused arg is harmless.
-    ((void (*)(int))(CONFIG_INIT_STORAGE_ADDRESS | 1))(1);
+    ((void (*)(int))ARCH_FN(CONFIG_INIT_STORAGE_ADDRESS))(1);
 }
 
 size_t dprintf(const char* format, ...) {
-    return ((size_t (*)(const char*, ...))(CONFIG_DPRINTF_ADDRESS | 1))(format);
+    return ((size_t (*)(const char*, ...))ARCH_FN(CONFIG_DPRINTF_ADDRESS))(format);
 }
 
 void platform_init(void) {
-    ((void (*)(void))(CONFIG_PLATFORM_INIT_ADDRESS | 1))();
+    ((void (*)(void))ARCH_FN(CONFIG_PLATFORM_INIT_ADDRESS))();
 }
 
 #ifdef CONFIG_USE_LEGACY_PARTITION_API
 static inline int partition_get_index(const char* name) {
-    return ((int (*)(const char*))(CONFIG_PARTITION_GET_INDEX_ADDRESS | 1))(name);
+    return ((int (*)(const char*))ARCH_FN(CONFIG_PARTITION_GET_INDEX_ADDRESS))(name);
 }
 
 static inline uint64_t partition_get_offset(int index) {
-    return ((uint64_t (*)(int))(CONFIG_PARTITION_GET_OFFSET_ADDRESS | 1))(index);
+    return ((uint64_t (*)(int))ARCH_FN(CONFIG_PARTITION_GET_OFFSET_ADDRESS))(index);
 }
 
 static inline uint64_t partition_get_size(int index) {
-    return ((uint64_t (*)(int))(CONFIG_PARTITION_GET_SIZE_ADDRESS | 1))(index);
+    return ((uint64_t (*)(int))ARCH_FN(CONFIG_PARTITION_GET_SIZE_ADDRESS))(index);
 }
 #endif
 
@@ -79,7 +79,7 @@ ssize_t partition_read(const char* part_name, off_t offset, uint8_t* data, size_
     return (read_bytes < 0) ? -1 : read_bytes;
 #endif
 #else
-    return ((ssize_t (*)(const char*, off_t, uint8_t*, size_t))(CONFIG_PARTITION_READ_ADDRESS | 1))(
+    return ((ssize_t (*)(const char*, off_t, uint8_t*, size_t))ARCH_FN(CONFIG_PARTITION_READ_ADDRESS))(
             part_name, offset, data, size);
 #endif
 }
@@ -99,6 +99,6 @@ uint64_t partition_get_size_by_name(const char* part_name) {
 
     return mt_part_size(part);
 #else
-    return ((uint64_t (*)(const char*))(CONFIG_PARTITION_GET_SIZE_BY_NAME_ADDRESS | 1))(part_name);
+    return ((uint64_t (*)(const char*))ARCH_FN(CONFIG_PARTITION_GET_SIZE_BY_NAME_ADDRESS))(part_name);
 #endif
 }

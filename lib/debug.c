@@ -17,7 +17,10 @@
 
 void uart_putc(int c, void* ctx) {
     (void)ctx;
-    
+#ifdef CONFIG_NATIVE_PRINTF_LOG
+    ((void (*)(const char *, ...))ARCH_FN(CONFIG_DPRINTF_ADDRESS))("%c", c);
+    return;
+#endif
     if (c == '\n')
         mtk_uart_putc('\r');
     
@@ -27,7 +30,7 @@ void uart_putc(int c, void* ctx) {
 #ifdef CONFIG_LK_LOG_STORE
 void lk_log_store(int c, void* ctx) {
     (void)ctx;
-    ((void (*)(int))(CONFIG_LK_LOG_STORE_ADDRESS | 1))(c);
+    ((void (*)(int))ARCH_FN(CONFIG_LK_LOG_STORE_ADDRESS))(c);
 }
 #endif
 
@@ -36,13 +39,13 @@ int printf(const char* fmt, ...) {
     va_start(args, fmt);
 
     int ret = npf_vpprintf(&uart_putc, NULL, fmt, args);
+    va_end(args);
 
 #ifdef CONFIG_LK_LOG_STORE
     va_start(args, fmt);
     npf_vpprintf(&lk_log_store, NULL, fmt, args);
-#endif
-
     va_end(args);
+#endif
     return ret;
 }
 
@@ -58,7 +61,7 @@ int video_printf(const char* fmt, ...) {
 
     va_end(args);
 
-    ((void (*)(const char*, ...))(CONFIG_VIDEO_PRINTF_ADDRESS | 1))("%s", buf);
+    ((void (*)(const char*, ...))ARCH_FN(CONFIG_VIDEO_PRINTF_ADDRESS))("%s", buf);
     return ret;
 }
 
@@ -93,7 +96,7 @@ void hexdump(const void* data, size_t size, int (*out)(const char *, ...)) {
     const uint8_t* ptr = (const uint8_t*)data;
 
     for (size_t i = 0; i < size; i += 16) {
-        out("%08x: ", (uintptr_t)(ptr + i));
+        out("%016lx: ", (unsigned long)(uintptr_t)(ptr + i));
 
         for (size_t j = 0; j < 16; j++) {
             if (i + j < size)

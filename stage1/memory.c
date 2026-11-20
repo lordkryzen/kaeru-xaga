@@ -7,9 +7,9 @@
 #include <stage1/memory.h>
 
 void* malloc(size_t size) {
-    return ((void* (*)(size_t))(CONFIG_MALLOC_ADDRESS | 1))(size);
+    return ((void* (*)(size_t))ARCH_FN(CONFIG_MALLOC_ADDRESS))(size);
 }
 
 void free(void* ptr) {
-    ((void (*)(void*))(CONFIG_FREE_ADDRESS | 1))(ptr);
+    ((void (*)(void*))ARCH_FN(CONFIG_FREE_ADDRESS))(ptr);
 }

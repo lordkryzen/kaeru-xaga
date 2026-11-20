@@ -82,7 +82,7 @@ void handle_recovery_boot(void) {
 
     printf("Recovery boot detected, modifying cmdline for unlocked state.\n");
 
-    static const uint32_t cmdline_addrs[] = {
+    static const uintptr_t cmdline_addrs[] = {
         CONFIG_RECOVERY_CMDLINE1_ADDRESS,
         CONFIG_RECOVERY_CMDLINE2_ADDRESS,
     };

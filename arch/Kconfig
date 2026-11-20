@@ -1,3 +1,8 @@
+
+config ARCH_ARM64
+	bool "Build the AArch64 architecture port"
+	default n
+
 menu "Architecture"
 	config CACHE_LINE
 		int "The CPU cache line"

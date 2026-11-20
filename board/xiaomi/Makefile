@@ -1,3 +1,5 @@
+
+lib-$(CONFIG_XIAOMI_XAGA) += xiaomi/board-xaga.o
 lib-$(CONFIG_XIAOMI_NIKEL) += xiaomi/board-nikel.o
 lib-$(CONFIG_XIAOMI_ROSEMARY) += xiaomi/board-rosemary.o
 lib-$(CONFIG_XIAOMI_EARTH) += xiaomi/board-earth.o

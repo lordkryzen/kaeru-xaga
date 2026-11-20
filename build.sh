@@ -45,7 +45,7 @@ fi
 
 DEVICE="${POSITIONAL[0]}"
 BOOTLOADER="${POSITIONAL[1]}"
-OUTPUT="${DEVICE}-kaeru.bin"
+OUTPUT="${KAERU_OUTPUT:-$PWD/${DEVICE}-kaeru.bin}"
 
 UTILS_DIR="$SCRIPT_DIR/utils"
 CONFIGS_DIR="$SCRIPT_DIR/configs"
@@ -61,6 +61,13 @@ if [ ! -e "$BOOTLOADER" ]; then
     echo "$BOOTLOADER not found!"
     exit 1
 fi
+BOOTLOADER="$(realpath -- "$BOOTLOADER")"
+OUTPUT="$(realpath -m -- "$OUTPUT")"
+PORT_ARCH=arm
+if grep -q '^CONFIG_ARCH_ARM64=y$' "$CONFIG_PATH"; then
+    PORT_ARCH=arm64
+fi
+cd "$SCRIPT_DIR"
 
 if [ "${KAERU_DEBUG:-0}" = "1" ]; then
     printf '\n\033[1;33m!! Debug mode enabled, verbose logging will be compiled in !!\033[0m\n\n'
@@ -68,10 +75,15 @@ if [ "${KAERU_DEBUG:-0}" = "1" ]; then
 fi
 
 
-make clean >/dev/null 2>&1 || true
-make distclean >/dev/null 2>&1 || true
+make ARCH="$PORT_ARCH" clean >/dev/null 2>&1 || true
+make ARCH="$PORT_ARCH" distclean >/dev/null 2>&1 || true
 
-make "${DEVICE}_defconfig"
-make -j"$(nproc)"
+make ARCH="$PORT_ARCH" "${DEVICE}_defconfig"
+make ARCH="$PORT_ARCH" -j"$(nproc)"
 
-python3 "$UTILS_DIR/patch.py" "$CONFIG_PATH" "$BOOTLOADER" kaeru -l stageone -o "$OUTPUT"
+if [ "$PORT_ARCH" = arm64 ]; then
+    python3 "$UTILS_DIR/patch_arm64.py" "$CONFIG_PATH" "$BOOTLOADER" kaeru \
+        --elf kaeru.o --cert-mode "${KAERU_CERT_MODE:-override}" -o "$OUTPUT"
+else
+    python3 "$UTILS_DIR/patch.py" "$CONFIG_PATH" "$BOOTLOADER" kaeru -l stageone -o "$OUTPUT"
+fi

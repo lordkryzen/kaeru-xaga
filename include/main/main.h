@@ -12,7 +12,7 @@
 
 /* these are weak no-ops by default, overridden by the
    real implementation when the subsystem is compiled in */
-extern uint32_t kaeru_reloc_delta;
+extern uintptr_t kaeru_reloc_delta;
 
 void __attribute__((weak)) sej_init(void);
 void __attribute__((weak)) storage_init(void);

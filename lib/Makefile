@@ -1,3 +1,4 @@
+
 lib-y += debug.o
 lib-y += common.o bootargs.o bootmode.o recovery.o
 lib-y += libc/string.o
@@ -18,6 +19,10 @@ lib-$(CONFIG_SEJ_SUPPORT) += crypto/xor.o crypto/sha256.o
 lib-$(CONFIG_SEJ_SUPPORT) += security/sej/sej.o security/sej/sej_hk.o security/sej/sej_sk.o
 lib-$(CONFIG_SEJ_SUPPORT) += security/seccfg.o
 
+ifeq ($(CONFIG_NATIVE_BIO_STORAGE),y)
+lib-y += storage/bio.o
+else
 lib-$(CONFIG_STORAGE_SUPPORT) += storage/storage.o storage/gpt.o
+endif
 
 lib-$(CONFIG_BOOTLOADER_MESSAGE_SUPPORT) += bootloader_message.o
